@@ -30,7 +30,7 @@ async function RestfulGetDuties (req: express.Request, res : express.Response) {
     const result = await db.query("SELECT * FROM duties");
     res.json(result.rows);
   } catch (err) {
-    res.status(500).send('Failed to query duties!');
+    res.status(500).send({msg: 'Failed to query duties!'});
   }
 }
 
@@ -39,14 +39,37 @@ async function RestfulCreateDuty (req: express.Request, res : express.Response) 
   const id = req.body.id;
   const name = req.body.name;
   if(id === undefined || name === undefined){
-    res.status(500).send('Failed to create duty! id or name is undefined');
+    res.status(500).send({msg: 'Failed to create duty! id or name is undefined'});
     return;
   }
+
+  // Avoid same ID creation.
+  try {
+    const result = await db.query("SELECT * FROM duties WHERE id='" + id + "'");
+    if(result.rows.length > 0){
+      res.status(500).send({msg: 'Failed to create duty Have same id!'});
+      return;
+    }
+  } catch (err) {
+    res.status(500).send({msg: 'Failed to create duty!'});
+  }
+
+  // Avoid same name creation.
+  try {
+    const result = await db.query("SELECT * FROM duties WHERE name='" + name + "'");
+    if(result.rows.length > 0){
+      res.status(500).send({msg: 'Failed to create duty Have same name!'});
+      return;
+    }
+  } catch (err) {
+    res.status(500).send({msg: 'Failed to create duty!'});
+  }
+
   try {
     await db.query("INSERT INTO duties (id, name) VALUES ('" + id + "', '" + name + "');"); 
     res.json(req.body);
   } catch (err) {
-    res.status(500).send('Failed to create duty!');
+    res.status(500).send({msg:'Failed to create duty!'});
   }
 }
 
@@ -55,14 +78,14 @@ async function RestfulDeleteDuty (req: express.Request, res : express.Response) 
   const id = req.body.id;
 
   if(id === undefined){
-    res.status(500).send('Failed to delete duty! id is undefined');
+    res.status(500).send({msg: 'Failed to delete duty! id is undefined'});
     return;
   }
   try {
     const result = await db.query("DELETE FROM duties WHERE id = '" + id + "';"); 
     res.sendStatus(204);
   } catch (err) {
-    res.status(500).send('Failed to delete duty!');
+    res.status(500).send({msg:'Failed to delete duty!'});
   }
 }
 
@@ -70,15 +93,27 @@ async function RestfulDeleteDuty (req: express.Request, res : express.Response) 
 async function RestfulUpdateDuty (req: express.Request, res : express.Response) {
   const id = req.body.id;
   const name = req.body.name;
+
+  // Avoid same name modification.
+  try {
+    const result = await db.query("SELECT * FROM duties WHERE name='" + name + "'");
+    if(result.rows.length > 0){
+      res.status(500).send({msg: 'Failed to create duty Have same name!'});
+      return;
+    }
+  } catch (err) {
+    res.status(500).send({msg: 'Failed to update duty!'});
+  }
+
   if(id === undefined || name === undefined){
-    res.status(500).send('Failed to update duty! id or name is undefined');
+    res.status(500).send({msg: 'Failed to update duty! id or name is undefined'});
     return;
   }
   try {
       const result = await db.query("UPDATE duties SET name = '" + name + "' WHERE id = '" + id + "' RETURNING *");
       res.json(result.rows[0]);
   } catch (err) {
-      res.status(500).send('Failed to update duty!');
+      res.status(500).send({msg: 'Failed to update duty!'});
   }
 }
 

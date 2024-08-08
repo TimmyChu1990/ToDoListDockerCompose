@@ -14,6 +14,10 @@ const AddDuty = (Props: AddDutyProps) => {
             alert("Please enter a name");
             return;
         }
+        if(name.length > 30){
+            alert('Duty name is too long. Make it shorter.');
+            return;
+        }
         const min = 1;
         const max = 10000;
         const rand = Math.floor(min + Math.random() * (max - min));
@@ -21,6 +25,7 @@ const AddDuty = (Props: AddDutyProps) => {
             name: name,
             id: rand.toString()
         }
+        setName('');
         Props.addDuty(tempDuty);
     }
     return (

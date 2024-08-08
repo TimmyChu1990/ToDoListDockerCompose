@@ -56,15 +56,17 @@ export const updateDutyAPI = async (duty: dutyType) => {
 
 export const deleteDutyAPI = async (id: string) => {
   try {
-    await fetch(API_URL + "deleteDuty", {
+    const response = await fetch(API_URL + "deleteDuty", {
         method: "DELETE",
         headers: {
             "Content-Type": "application/json"
         },
         body: JSON.stringify({id})
     });
+    return 'success';
   } catch (error) {
     alert('Failed to delete duty!');
+    return 'failed';
   }
 };
 
@@ -92,20 +94,39 @@ function App() {
   }, []);
 
   // Add Task.
-  const addDuty = (duty: dutyType) => {
-    createDutyAPI(duty);
+  const addDuty = async(duty: dutyType) => {
+    const result =  await createDutyAPI(duty);
+    if(result.msg){
+      alert(result.msg);
+      return;
+    }
     setDuties([...duties, duty])
   }
 
   //  Delete duty.
-  const deleteDuty = (id: string) => {
-    deleteDutyAPI(id);
-    setDuties(duties.filter((duty) => duty.id !== id));
+  const deleteDuty = async(id: string) => {
+    const result = await deleteDutyAPI(id);
+    if(result === 'success'){
+      setDuties(duties.filter((duty) => duty.id !== id));
+    }
   }
 
   // Change Name.
-  const changeName = (duty: dutyType) => {
-    updateDutyAPI(duty);
+  const changeName = async(duty: dutyType) => {
+    if(duty.name === ''){
+      alert('Name cannot be empty.');
+      return;
+    }
+    if(duty.name.length > 30){
+      alert('Name cannot be too log.');
+      return;
+    }
+
+    const result =  await updateDutyAPI(duty);;
+    if(result.msg){
+      alert(result.msg);
+      return;
+    }
     setDuties(duties.map((dutymap) => dutymap.id === duty.id ? {...dutymap, name: duty.name} : dutymap));
   }
 
